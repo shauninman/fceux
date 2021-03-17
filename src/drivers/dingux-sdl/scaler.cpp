@@ -74,9 +74,9 @@ void upscale_320x448(uint32 *dst, uint8 *src)
 }
 
 
-void upscale_320x240(uint32 *dst, uint8 *src)
+void upscale_320x240(uint32 *dst, uint8 *src, int midh)
 {
-	int midh = 240 * 3 / 4;
+//	int midh = 240 * 3 / 4;
 	int Eh = 0;
 	int source = 0;
 	int dh = 0;

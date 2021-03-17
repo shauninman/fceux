@@ -131,10 +131,14 @@ static void MergeControls(unsigned long key)
 
 static void resetMappings(unsigned long key)
 {
-	g_config->setOption("SDL.Input.GamePad.0A", DefaultGamePad[0][1]);
-	g_config->setOption("SDL.Input.GamePad.0B", DefaultGamePad[0][9]);
-	g_config->setOption("SDL.Input.GamePad.0TurboA", DefaultGamePad[0][0]);
-	g_config->setOption("SDL.Input.GamePad.0TurboB", DefaultGamePad[0][8]);
+	g_config->setOption("SDL.Input.GamePad.0A", DefaultGamePad[0][0]);
+	g_config->setOption("SDL.Input.GamePad.0B", DefaultGamePad[0][1]);
+	g_config->setOption("SDL.Input.GamePad.0TurboA", DefaultGamePad[0][8]);
+	g_config->setOption("SDL.Input.GamePad.0TurboB", DefaultGamePad[0][9]);
+//	g_config->setOption("SDL.Input.GamePad.0A", DefaultGamePad[0][1]);
+//	g_config->setOption("SDL.Input.GamePad.0B", DefaultGamePad[0][9]);
+//	g_config->setOption("SDL.Input.GamePad.0TurboA", DefaultGamePad[0][0]);
+//	g_config->setOption("SDL.Input.GamePad.0TurboB", DefaultGamePad[0][8]);
 	g_config->setOption("SDL.MergeControls", 0);
 	g_config->setOption("SDL.AutoFireFPS", 30);
 	g_config->setOption("SDL.InputMenu", 0);

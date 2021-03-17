@@ -1,16 +1,9 @@
-#
-# FCEUX for the RetroFW
-#
-# by pingflood; 2019
-#
+#PROFILE=YES
+#PROFILE=APPLY
 
 TARGET = fceux/fceux.dge
 
-TOOLCHAIN=
-BINDIR=
-
-CHAINPREFIX := /opt/mipsel-linux-uclibc
-CROSS_COMPILE := $(CHAINPREFIX)/usr/bin/mipsel-linux-
+CROSS_COMPILE := /opt/trimui-toolchain/bin/arm-buildroot-linux-gnueabi-
 
 CC = $(CROSS_COMPILE)gcc
 CXX = $(CROSS_COMPILE)g++
@@ -223,16 +216,16 @@ DRIVER_OBJS = $(SRC)drivers/dingux-sdl/config.o $(SRC)drivers/dingux-sdl/input.o
 OBJS = $(CORE_OBJS) $(BOARDS_OBJS) $(INPUT_OBJS) $(MAPPERS_OBJS) $(UTILS_OBJS) \
 	$(COMMON_DRIVER_OBJS) $(DRIVER_OBJS)
 
-INCLUDEDIR=$(CHAINPREFIX)/include
+INCLUDEDIR = $(SYSROOT)/usr/include
 CFLAGS = -I$(INCLUDEDIR) -I$(SRC) -flto
 CXXFLAGS = -I$(INCLUDEDIR) -flto
-LDFLAGS = -s $(SDL_LIBS) -lSDL_image -flto
+LDFLAGS = -s $(SDL_LIBS) -lSDL_image -lz -lm
 
 W_OPTS	= -Wno-write-strings -Wno-sign-compare
 
-F_OPTS = -fomit-frame-pointer -fno-builtin -fno-common
+F_OPTS = -flto -fomit-frame-pointer -fno-builtin -fno-common
 
-CC_OPTS	= -O2 -mips32 $(F_OPTS) $(W_OPTS) $(SDL_CFLAGS)
+CC_OPTS	= -O2 -marm -march=armv5te -mtune=arm926ej-s $(F_OPTS) $(W_OPTS) $(SDL_CFLAGS)
 
 CFLAGS += $(CC_OPTS)
 CFLAGS += -DDINGUX \
@@ -243,20 +236,20 @@ CFLAGS += -DDINGUX \
 	  -D_REENTRANT \
 	  -I$(INCLUDEDIR)/SDL -D_GNU_SOURCE=1 -D_REENTRANT
 
+ifeq ($(PROFILE), YES)
+CFLAGS += -fprofile-generate -fprofile-dir=/mnt/SDCARD/profile/fceux
+LDFLAGS += -lgcov -fprofile-generate -fprofile-dir=/mnt/SDCARD/profile/fceux
+TARGET = fceux/fceux_pm.dge
+else ifeq ($(PROFILE), APPLY)
+CFLAGS += -fprofile-use -fprofile-dir=./profile -fbranch-probabilities
+TARGET = fceux/fceux.dge
+endif
+
 CFLAGS += -fno-strict-aliasing
 
-# CFLAGS += -fprofile-generate -fprofile-dir=/home/retrofw/profile/fceux
-CFLAGS += -fprofile-use -fprofile-dir=./profile -DNO_ROM_BROWSER
-
 CXXFLAGS += $(CFLAGS)
-# LDFLAGS  += $(CFLAGS)
-# LDFLAGS  += $(CC_OPTS)
-ifdef STATIC
-LDFLAGS  += -static-libgcc -static-libstdc++
-endif
-LDFLAGS += -fprofile-generate -fprofile-dir=/home/retrofw/profile/fceux -fno-strict-aliasing
 
-LIBS = -L$(LIBDIR) `sdl-config --libs` -lz -lm
+LDFLAGS += -fno-strict-aliasing
 
 all: $(TARGET)
 
@@ -265,21 +258,7 @@ $(TARGET): $(OBJS)
 	# @cp src/drivers/dingux-sdl/gui/*.bmp fceux/
 	@echo Linking $@...
 	@echo $(CXX) $(LDFLAGS) $(OBJS) -o $@
-	$(CXX) $(LDFLAGS) $(OBJS) $(LIBS) -o $@
-
-ipk: $(TARGET)
-	@rm -rf /tmp/.fceux-ipk/ && mkdir -p /tmp/.fceux-ipk/root/home/retrofw/emus/fceux/palettes /tmp/.fceux-ipk/root/home/retrofw/apps/gmenu2x/sections/emulators /tmp/.fceux-ipk/root/home/retrofw/apps/gmenu2x/sections/emulators.systems
-	@cp -r fceux/palettes fceux/backdrop.png fceux/fceux.dge fceux/fceux.man.txt fceux/fceux.png fceux/sp.bmp /tmp/.fceux-ipk/root/home/retrofw/emus/fceux
-	@cp fceux/fceux.lnk /tmp/.fceux-ipk/root/home/retrofw/apps/gmenu2x/sections/emulators
-	@cp fceux/nes.fceux.lnk /tmp/.fceux-ipk/root/home/retrofw/apps/gmenu2x/sections/emulators.systems
-	@sed "s/^Version:.*/Version: $$(date +%Y%m%d)/" fceux/control > /tmp/.fceux-ipk/control
-	@cp fceux/conffiles /tmp/.fceux-ipk/
-	# echo -e "#!/bin/sh\nmkdir -p /home/retrofw/profile/fceux; exit 0" > /tmp/.fceux-ipk/preinst
-	# chmod +x /tmp/.fceux-ipk/preinst
-	@tar --owner=0 --group=0 -czvf /tmp/.fceux-ipk/control.tar.gz -C /tmp/.fceux-ipk/ control conffiles # preinst
-	@tar --owner=0 --group=0 -czvf /tmp/.fceux-ipk/data.tar.gz -C /tmp/.fceux-ipk/root/ .
-	@echo 2.0 > /tmp/.fceux-ipk/debian-binary
-	@ar r fceux/fceux.ipk /tmp/.fceux-ipk/control.tar.gz /tmp/.fceux-ipk/data.tar.gz /tmp/.fceux-ipk/debian-binary
+	$(CXX) $(LDFLAGS) $(OBJS) -o $@
 
 %.o: %.c
 	@echo Compiling $<...
@@ -297,19 +276,5 @@ ipk: $(TARGET)
 	@echo Assembling $<...
 	$(CXX) $(CDEFS) $(CXXFLAGS) -c $< -o $@
 
-opk: $(TARGET)
-	@mksquashfs \
-	fceux/default.retrofw.desktop \
-	fceux/nes.retrofw.desktop \
-	fceux/palettes \
-	fceux/fceux.dge \
-	fceux/fceux.man.txt \
-	fceux/fceux.png \
-	fceux/backdrop.png \
-	fceux/sp.bmp \
-	fceux/fceux.opk \
-	-all-root -noappend -no-exports -no-xattrs
-
 clean:
-	rm -f $(OBJS) $(TARGET) fceux/fceux.ipk
-	rm -rf /tmp/.fceux-ipk/
+	rm -f $(OBJS) $(TARGET)

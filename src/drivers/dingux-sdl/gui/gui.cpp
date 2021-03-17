@@ -269,14 +269,8 @@ static MenuEntry main_menu[] = {
 		{ "Settings", "Change current settings", cmd_settings_menu },
 		{ "Exit", "Exit emulator", cmd_exit }
 };
-static int main_menu_items;
 
-// #ifdef NO_ROM_BROWSER
-// 	int main_menu_items = 6;
-// #else NO_ROM_BROWSER
-// 	int main_menu_items = 7;
-// #endif
-
+static	int main_menu_items = sizeof(main_menu) / sizeof(main_menu[0]);
 
 extern char FileBase[2048];
 
@@ -293,25 +287,6 @@ int FCEUGUI_Init(FCEUGI *gi)
 	if (InitFont() < 0)
 		return -2;
 
-	main_menu_items = sizeof(main_menu) / sizeof(main_menu[0]);
-
-	if (g_romtype != GIT_FDS) { // Remove "Flip disc" if not a FDS
-		for (int i = 3; i < main_menu_items - 1; i++)
-			main_menu[i] = main_menu[i+1];
-		main_menu_items--;
-	}
-
-	if (gi) {
-		// if (strlen(FileBase) > 28) {
-			// strncpy(g_romname, FileBase, 24);
-		if (strlen(FileBase) > 36) {
-			strncpy(g_romname, FileBase, 34);
-			strcat(g_romname, "...");
-		} else
-			strcpy(g_romname, FileBase);
-		g_romtype = gi->type;
-	}
-
 	return 0;
 }
 
@@ -326,6 +301,16 @@ void FCEUGUI_Reset(FCEUGI *gi) {
 	} else
 		strcpy(g_romname, FileBase);
 	g_romtype = gi->type;
+
+#ifdef NO_ROM_BROWSER	// fds is able to load if browser is present
+	main_menu_items = sizeof(main_menu) / sizeof(main_menu[0]);
+
+	if (g_romtype != GIT_FDS) { // Remove "Flip disc" if not a FDS
+		for (int i = 3; i < main_menu_items - 1; i++)
+			main_menu[i] = main_menu[i+1];
+		main_menu_items--;
+	}
+#endif
 }
 
 void FCEUGUI_Kill() {
@@ -422,13 +407,13 @@ void FCEUGUI_Run() {
 
 			// Draw menu
 			for (i = 0, y = 72; i < main_menu_items; i++) {
-				// if (g_romtype != GIT_FDS && !strcmp(main_menu[i].name, "Flip disc")) continue;
+//			if (g_romtype != GIT_FDS && !strcmp(main_menu[i].name, "Flip disc")) continue;
 
 				DrawText(gui_screen, main_menu[i].name, 60, y);
 				y += 16;
 			}
 
-			// if (g_romtype != GIT_FDS && !strcmp(main_menu[index].name, "Flip disc")) index++;
+//			if (g_romtype != GIT_FDS && !strcmp(main_menu[index].name, "Flip disc")) index++;
 
 			// Draw info
 			DrawText(gui_screen, main_menu[index].info, 8, 225);

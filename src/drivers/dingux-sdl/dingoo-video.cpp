@@ -143,7 +143,7 @@ int InitVideo(FCEUGI *gi) {
 	g_config->getOption("SDL.Brightness", &brightness);
 
 	s_inited = 1;
-	FDSSwitchRequested = 0;
+//	FDSSwitchRequested = 0;		// remove for flip disc menu
 
 	//int desbpp;
 	//g_config->getOption("SDL.SpecialFilter", &s_eefx);
@@ -158,17 +158,8 @@ int InitVideo(FCEUGI *gi) {
 
 	// initialize dingoo video mode
 	if (!s_VideoModeSet) {
-		int w, h;
-		if (s_fullscreen == 1) {
-			w = 256; h = 240;//PAL ? 240 : 224;
-		} else {
-			w = 320; h = 240;
-		}
-		if(SDL_VideoModeOK(w, h, 16, SDL_HWSURFACE | DINGOO_MULTIBUF) != 0)
-		{
-			screen = SDL_SetVideoMode(w, h, 16, SDL_HWSURFACE | DINGOO_MULTIBUF);
-			s_VideoModeSet = true;
-		}
+		screen = SDL_SetVideoMode(320, 240, 16, SDL_HWSURFACE | DINGOO_MULTIBUF);
+		s_VideoModeSet = true;
 	}
 
 	// a hack to bind inner buffer to nes_screen surface
@@ -329,8 +320,6 @@ void BlitScreen(uint8 *XBuf) {
 	// TODO - Move these to its own file?
 	if (SDL_MUSTLOCK(screen)) SDL_LockSurface(screen);
 
-	register uint8 *pBuf = XBuf;
-
 	switch (s_fullscreen) {
 	    case 4: // fullscreen smooth
 			if (s_clipSides) {
@@ -339,40 +328,36 @@ void BlitScreen(uint8 *XBuf) {
 				upscale_320x240_bilinearish_noclip((uint32 *)screen->pixels, (uint8 *)XBuf + 256 * 8, 256);
 			}
 			break;
-	    case 3: // fullscreen
-			switch(screen->w) {
-				case 480: upscale_480x272((uint32 *)screen->pixels, (uint8 *)XBuf + 256 * 8); break;
-				case 400: upscale_384x240((uint32 *)screen->pixels, (uint8 *)XBuf + 256 * 8); break;
-				case 320: upscale_320x240((uint32 *)screen->pixels, (uint8 *)XBuf + 256 * 8); break;
-			}
+	    case 3: // fullscreen fast2 (fceux default)
+			upscale_320x240((uint32 *)screen->pixels, (uint8 *)XBuf + 256 * 8, 240 * 3 / 4);
 			break;
-	    case 2: // aspect fullscreen
-			switch(screen->w) {
-				case 480: upscale_384x272((uint32 *)screen->pixels, (uint8 *)XBuf + 256 * 8); break;
-				case 400:
-				case 320:
-					pBuf += (s_srendline * 256) + 8;
-					register uint16 *dest = (uint16 *) screen->pixels;
-					//dest += (320 * s_srendline) + 20;
-					dest += (screen->w * s_srendline) + (screen->w - 280) / 2 + ((screen->h - 240) / 2) * screen->w;
+	    case 2: // fullscreen fast1 (added for TRIMUI)
+			upscale_320x240((uint32 *)screen->pixels, (uint8 *)XBuf + 256 * 8, 224);
+			break;
+	    case 1: // aspect fullscreen
+			{	register uint8 *pBuf = XBuf;
+				pBuf += (s_srendline * 256) + 8;
+				register uint16 *dest = (uint16 *) screen->pixels;
+				//dest += (320 * s_srendline) + 20;
+				dest += (screen->w * s_srendline) + (screen->w - 280) / 2 + ((screen->h - 240) / 2) * screen->w;
 
-					// semi fullscreen no blur
-					for (y = s_tlines; y; y--) {
-						for (x = 240; x; x -= 6) {
-							__builtin_prefetch(dest + 2, 1);
-							*dest++ = s_psdl[*pBuf];
-							*dest++ = s_psdl[*(pBuf + 1)];
-							*dest++ = s_psdl[*(pBuf + 2)];
-							*dest++ = s_psdl[*(pBuf + 3)];
-							*dest++ = s_psdl[*(pBuf + 3)];
-							*dest++ = s_psdl[*(pBuf + 4)];
-							*dest++ = s_psdl[*(pBuf + 5)];
-							pBuf += 6;
-						}
-						pBuf += 16;
-						//dest += 40;
-						dest += screen->w - 280;
+				// semi fullscreen no blur
+				for (y = s_tlines; y; y--) {
+					for (x = 240; x; x -= 6) {
+						__builtin_prefetch(dest + 2, 1);
+						*dest++ = s_psdl[*pBuf];
+						*dest++ = s_psdl[*(pBuf + 1)];
+						*dest++ = s_psdl[*(pBuf + 2)];
+						*dest++ = s_psdl[*(pBuf + 3)];
+						*dest++ = ((s_psdl[*(pBuf + 3)] & 0xF7DE) >> 1) + ((s_psdl[*(pBuf + 4)] & 0xF7DE) >> 1); // added
+						*dest++ = s_psdl[*(pBuf + 4)];
+						*dest++ = s_psdl[*(pBuf + 5)];
+						pBuf += 6;
 					}
+					pBuf += 16;
+					//dest += 40;
+					dest += screen->w - 280;
+				}
 			}
 			break;
 	    default: // native res
@@ -383,6 +368,7 @@ void BlitScreen(uint8 *XBuf) {
 			register uint32 *dest = (uint32 *) screen->pixels;
 
 			// XXX soules - not entirely sure why this is being done yet
+			register uint8 *pBuf = XBuf;
 			pBuf += (s_srendline * 256) + NOFFSET;
 			dest += (screen->w/2 * s_srendline) + pinc / 2 + ((screen->h - 240) / 4) * screen->w;
 

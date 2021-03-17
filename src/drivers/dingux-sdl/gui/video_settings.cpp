@@ -7,9 +7,10 @@ extern Config *g_config;
 // Fullscreen mode
 static char *scale_tag[] = {
 		"Original",
-		"Hardware",
+//		"Hardware",	// cut for TRIMUI
 		"Aspect",
-		"FS Fast",
+		"FS Fast 1",	// added for TRIMUI
+		"FS Fast 2",
 		"FS Smooth"
 };
 
