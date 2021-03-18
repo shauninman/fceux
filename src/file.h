@@ -140,6 +140,7 @@ int FCEU_fisarchive(FCEUFILE*);
 void GetFileBase(const char *f);
 std::string FCEU_GetPath(int type);
 std::string FCEU_MakePath(int type, const char* filebase);
+std::string FCEU_MakeSaveStatePathTemplate();
 std::string FCEU_MakeFName(int type, int id1, const char *cd1);
 std::string GetMfn();
 void FCEU_SplitArchiveFilename(std::string src, std::string& archive, std::string& file, std::string& fileToOpen);

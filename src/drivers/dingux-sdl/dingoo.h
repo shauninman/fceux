@@ -21,4 +21,7 @@ extern int pal_emulation;
 extern bool swapDuty;
 extern bool paldeemphswap;
 
+
+extern void* mmenu;
+
 #endif

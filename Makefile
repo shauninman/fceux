@@ -250,6 +250,7 @@ CFLAGS += -fno-strict-aliasing
 CXXFLAGS += $(CFLAGS)
 
 LDFLAGS += -fno-strict-aliasing
+LDFLAGS += -lSDL_image -lSDL_ttf -ldl
 
 all: $(TARGET)
 

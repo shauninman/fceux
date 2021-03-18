@@ -44,8 +44,15 @@
 #include<gtk/gtk.h>
 #endif
 
+#include <dlfcn.h>
+extern "C" {
+	#include <mmenu.h>
+}
+extern void* mmenu;
+
 /** GLOBALS **/
 int NoWaiting = 1;
+extern SDL_Surface* screen;
 extern Config *g_config;
 extern bool bindSavestate, frameAdvanceLagSkip, lagCounterDisplay;
 // counter for autofire
@@ -303,7 +310,34 @@ static void KeyboardCommands() {
 	if (MenuRequested) {
 		SilenceSound(1);
 		MenuRequested = false;
-		FCEUGUI_Run();
+		
+		if (mmenu) {
+			ShowMenu_t ShowMenu = (ShowMenu_t)dlsym(mmenu, "ShowMenu");
+			MenuReturnStatus status = ShowMenu(GameInfo->filename, (char*)FCEU_MakeSaveStatePathTemplate().c_str(), screen, kMenuEventKeyDown);
+
+			extern int g_slot;
+			if (status==kStatusExitGame) {
+				FCEUI_CloseGame();
+			}
+			else if (status==kStatusOpenMenu) {
+				FCEUGUI_Run();
+			}
+			else if (status>=kStatusLoadSlot) {
+				g_slot = status - kStatusLoadSlot;
+				FCEUI_SelectState(g_slot, 0);
+				FCEUI_LoadState(NULL);
+			}
+			else if (status>=kStatusSaveSlot) {
+				g_slot = status - kStatusSaveSlot;
+				FCEUI_SelectState(g_slot, 0);
+				FCEUI_SaveState(NULL);
+			}
+			// dingoo_clear_video();
+		}
+		else {
+			FCEUGUI_Run();
+		}
+		
 		while (ispressed(DINGOO_A) || ispressed(DINGOO_B)) { // wait for keyup
 			SDL_PumpEvents();
 		}
@@ -313,45 +347,45 @@ static void KeyboardCommands() {
 
 	// R shift + combokeys
 	if(ispressed(DINGOO_SELECT)) {
-		extern int g_slot; // import from gui.cpp
-		void save_preview(); // import from gui.cpp
-		if(_keyonly(DINGOO_R)) { // R + A  save state
-			FCEUI_SelectState(g_slot, 0);
-			FCEUI_SaveState(NULL);
-			save_preview();
-			resetkey(DINGOO_R);
-		}
-		if(_keyonly(DINGOO_L)) { // R + B  load state
-			FCEUI_SelectState(g_slot, 0);
-			FCEUI_LoadState(NULL);
-			resetkey(DINGOO_L);
-		}
-		if(_keyonly(DINGOO_X)) { // R + X  toggle fullscreen
-			extern int s_fullscreen; // from dingoo_video.cpp
-			s_fullscreen = (s_fullscreen + 1) % 5;
-			g_config->setOption("SDL.Fullscreen", s_fullscreen);
-			FCEUD_DriverReset();
-			dingoo_clear_video();
-			resetkey(DINGOO_X);
-		}
-		if(_keyonly(DINGOO_B)) { // R + Y  flip fds disk
-			if(gametype == GIT_FDS) FCEUI_FDSFlip();
-			resetkey(DINGOO_B);
-		}
-		if(_keyonly(DINGOO_A)) { // R + SELECT
-			FCEUI_SaveSnapshot();
-			resetkey(DINGOO_A);
-		}
-		if(_keyonly(DINGOO_Y)) { // R + UP tooggle fps show
-			extern int showfps; // from dingoo.cpp
-			showfps ^= 1;
-			g_config->setOption("SDL.ShowFPS", showfps);
-			resetkey(DINGOO_Y);
-		}
-		if(_keyonly(DINGOO_LEFT)) { // R + LEFT  insert vsuini coin
-			if (gametype == GIT_VSUNI) FCEUI_VSUniCoin();
-			resetkey(DINGOO_LEFT);
-		}
+		// extern int g_slot; // import from gui.cpp
+		// void save_preview(); // import from gui.cpp
+		// if(_keyonly(DINGOO_R)) { // R + A  save state
+		// 	FCEUI_SelectState(g_slot, 0);
+		// 	FCEUI_SaveState(NULL);
+		// 	save_preview();
+		// 	resetkey(DINGOO_R);
+		// }
+		// if(_keyonly(DINGOO_L)) { // R + B  load state
+		// 	FCEUI_SelectState(g_slot, 0);
+		// 	FCEUI_LoadState(NULL);
+		// 	resetkey(DINGOO_L);
+		// }
+		// if(_keyonly(DINGOO_X)) { // R + X  toggle fullscreen
+		// 	extern int s_fullscreen; // from dingoo_video.cpp
+		// 	s_fullscreen = (s_fullscreen + 1) % 5;
+		// 	g_config->setOption("SDL.Fullscreen", s_fullscreen);
+		// 	FCEUD_DriverReset();
+		// 	dingoo_clear_video();
+		// 	resetkey(DINGOO_X);
+		// }
+		// if(_keyonly(DINGOO_B)) { // R + Y  flip fds disk
+		// 	if(gametype == GIT_FDS) FCEUI_FDSFlip();
+		// 	resetkey(DINGOO_B);
+		// }
+		// if(_keyonly(DINGOO_A)) { // R + SELECT
+		// 	FCEUI_SaveSnapshot();
+		// 	resetkey(DINGOO_A);
+		// }
+		// if(_keyonly(DINGOO_Y)) { // R + UP tooggle fps show
+		// 	extern int showfps; // from dingoo.cpp
+		// 	showfps ^= 1;
+		// 	g_config->setOption("SDL.ShowFPS", showfps);
+		// 	resetkey(DINGOO_Y);
+		// }
+		// if(_keyonly(DINGOO_LEFT)) { // R + LEFT  insert vsuini coin
+		// 	if (gametype == GIT_VSUNI) FCEUI_VSUniCoin();
+		// 	resetkey(DINGOO_LEFT);
+		// }
 		// if(_keyonly(DINGOO_DOWN)) {// R + DOWN activate subtitle display (??) is this really needed
 		// 	resetkey(DINGOO_DOWN);
 		// }
@@ -364,14 +398,14 @@ static void KeyboardCommands() {
 		// }
 	}
 
-    // toggle fastforwad
-    if(ispressed(DINGOO_L)) {
-        fastforward = true; //!fastforward;
-        // fastforward = !fastforward;
-        // resetkey(DINGOO_L);
-    } else {
-        fastforward = false;
-    }
+    // // toggle fastforwad
+    // if(ispressed(DINGOO_L)) {
+    //     fastforward = true; //!fastforward;
+    //     // fastforward = !fastforward;
+    //     // resetkey(DINGOO_L);
+    // } else {
+    //     fastforward = false;
+    // }
 
 	/*
 	 // Toggle Movie auto-backup
@@ -667,7 +701,7 @@ static void UpdatePhysicalInput()
         case SDL_KEYDOWN:
 			if (
 				((inputmenu == 0 || inputmenu == 1) && event.key.keysym.sym == DINGOO_MENU)
-				|| ((inputmenu == 0 || inputmenu == 2) && (g_keyState[DINGOO_SELECT] && event.key.keysym.sym == DINGOO_START))
+				// || ((inputmenu == 0 || inputmenu == 2) && (g_keyState[DINGOO_SELECT] && event.key.keysym.sym == DINGOO_START))
 			) {
 	            // Because a KEYUP is sent straight after the KEYDOWN for the
 	            // Power switch, SDL_GetKeyState will not ever see this.

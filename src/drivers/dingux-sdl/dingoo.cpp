@@ -533,6 +533,10 @@ int FCEUD_LoadMovie(const char *name, char *romname) {
 #ifdef WIN32
 #undef main
 #endif
+
+#include <dlfcn.h>
+void* mmenu = NULL;
+
 int main(int argc, char *argv[]) {
 
 	int error;
@@ -810,7 +814,9 @@ int main(int argc, char *argv[]) {
 
     // update rom specified input config
 	UpdateInput(g_config);
-
+	
+	mmenu = dlopen("libmmenu.so", RTLD_LAZY);
+	
 	// loop playing the game
 	DoFun(frameskip);
 

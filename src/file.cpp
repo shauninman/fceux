@@ -589,6 +589,50 @@ std::string FCEU_MakePath(int type, const char* filebase)
 	return ret;
 }
 
+std::string FCEU_MakeSaveStatePathTemplate() {
+	char ret[FILENAME_MAX] = "";
+	struct stat tmpstat;
+	std::string mfnString;
+	const char* mfn;	// the movie filename
+	
+	if (bindSavestate)
+		mfnString = GetMfn();
+	else
+		mfnString = "";
+
+	if (mfnString.length() <= MAX_MOVIEFILENAME_LEN)
+	{
+		mfn = mfnString.c_str();
+	} else
+	{
+		//This caps the movie filename length before adding it to the savestate filename.
+		//This helps prevent possible crashes from savestate filenames of excessive length.
+		mfnString = mfnString.substr(0, MAX_MOVIEFILENAME_LEN);
+		mfn = mfnString.c_str();
+	}
+
+	if(odirs[FCEUIOD_STATES])
+	{
+		sprintf(ret,"%s" PSS "%s%s.fc%%d",odirs[FCEUIOD_STATES],FileBase,mfn);
+	} else
+	{
+		sprintf(ret,"%s" PSS "fcs" PSS "%s%s.fc%%d",BaseDirectory.c_str(),FileBase,mfn);
+	}
+	if(stat(ret,&tmpstat)==-1)
+	{
+		if(odirs[FCEUIOD_STATES])
+		{
+			sprintf(ret,"%s" PSS "%s%s.fc%%d",odirs[FCEUIOD_STATES],FileBase,mfn);
+		} else
+		{
+			sprintf(ret,"%s" PSS "fcs" PSS "%s%s.fc%%d",BaseDirectory.c_str(),FileBase,mfn);
+		}
+	}
+	
+	//convert | to . for archive filenames.
+	return mass_replace(ret,"|",".");
+}
+
 std::string FCEU_MakeFName(int type, int id1, const char *cd1)
 {
 	char ret[FILENAME_MAX] = "";

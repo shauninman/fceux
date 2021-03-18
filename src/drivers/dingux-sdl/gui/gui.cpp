@@ -51,11 +51,11 @@ void readkey()
 	while(SDL_PollEvent(&event))
 		switch(event.type) {
 			case SDL_KEYUP:
-				SDL_EnableKeyRepeat(0,0);
+				// SDL_EnableKeyRepeat(0,0);
 				g_key = 0;
 				return;
 			case SDL_KEYDOWN:
-				SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY + 100, SDL_DEFAULT_REPEAT_INTERVAL);
+				// SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY + 100, SDL_DEFAULT_REPEAT_INTERVAL);
 				g_key = event.key.keysym.sym;
 				return;
 		}
@@ -325,6 +325,8 @@ void FCEUGUI_Kill() {
 extern void InitGuiVideo();
 
 void FCEUGUI_Run() {
+	SDL_EnableKeyRepeat(500, 150); // top level menu doesn't use repeat?
+	
 	static int index = 0;
 	static int spy = 72;
 	int done = 0, y, i;
