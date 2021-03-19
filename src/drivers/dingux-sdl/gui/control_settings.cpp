@@ -3,9 +3,9 @@ extern Config *g_config;
 
 // Fullscreen mode
 static char *menu_button[] = {
-	"Pwr/Sel+Strt",
+	// "Pwr/Sel+Strt",
 	"Power",
-	"Select+Start"
+	// "Select+Start"
 };
 
 
@@ -149,13 +149,14 @@ static void resetMappings(unsigned long key)
 
 static void InputMenu(unsigned long key)
 {
-	int val;
-	g_config->getOption("SDL.InputMenu", &val);
-
-	if (key == DINGOO_RIGHT) val = val < 2 ? val + 1 : 2;
-	if (key == DINGOO_LEFT) val = val > 0 ? val - 1 : 0;
-   
-	g_config->setOption("SDL.InputMenu", val);
+	// int val;
+	// g_config->getOption("SDL.InputMenu", &val);
+	//
+	// if (key == DINGOO_RIGHT) val = val < 2 ? val + 1 : 2;
+	// if (key == DINGOO_LEFT) val = val > 0 ? val - 1 : 0;
+	//
+	// g_config->setOption("SDL.InputMenu", val);
+	g_config->setOption("SDL.InputMenu", 0);
 	UpdateInput(g_config);
 }
 
@@ -170,7 +171,7 @@ static SettingEntry cm_menu[] =
 	{ "Merge P1/P2", "Control both players at once", "SDL.MergeControls", MergeControls },
 	{ "Mouse cursor", "Show/hide mouse cursor", "SDL.ShowMouseCursor", show_mouse_update },
 	{ "Mouse speed", "Mouse cursor speed", "SDL.MouseSpeed", mouse_update },
-	{ "Menu", "Input to open the menu", "SDL.InputMenu", InputMenu },
+	// { "Menu", "Input to open the menu", "SDL.InputMenu", InputMenu },
 	{ "Reset defaults", "Reset default control mappings", "", resetMappings },
 };
 
@@ -334,11 +335,11 @@ int RunControlSettings()
                     }
 					sprintf(cBtn, "%d FPS", iBtnVal);
                 }
-				else if(!strcmp(cm_menu[i].name, "Menu"))
-                {
-					g_config->getOption("SDL.InputMenu", &iBtnVal);
-					sprintf(cBtn, "%s", menu_button[iBtnVal]);
-                }
+				// else if(!strcmp(cm_menu[i].name, "Menu"))
+				//                 {
+				// 	g_config->getOption("SDL.InputMenu", &iBtnVal);
+				// 	sprintf(cBtn, "%s", menu_button[iBtnVal]);
+				//                 }
 				else sprintf(cBtn, "%d", iBtnVal);
 
 				DrawText(gui_screen, cBtn, 210, y);
