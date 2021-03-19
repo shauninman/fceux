@@ -236,13 +236,14 @@ CFLAGS += -DDINGUX \
 	  -D_REENTRANT \
 	  -I$(INCLUDEDIR)/SDL -D_GNU_SOURCE=1 -D_REENTRANT
 
+PROFILE=APPLY
 ifeq ($(PROFILE), YES)
-CFLAGS += -fprofile-generate -fprofile-dir=/mnt/SDCARD/profile/fceux
-LDFLAGS += -lgcov -fprofile-generate -fprofile-dir=/mnt/SDCARD/profile/fceux
-TARGET = fceux/fceux_pm.dge
+CFLAGS += -fprofile-generate -fprofile-dir=./profile
+LDFLAGS += -lgcov -fprofile-generate -fprofile-dir=./profile
+# TARGET = fceux/fceux_pm.dge
 else ifeq ($(PROFILE), APPLY)
 CFLAGS += -fprofile-use -fprofile-dir=./profile -fbranch-probabilities
-TARGET = fceux/fceux.dge
+# TARGET = fceux/fceux.dge
 endif
 
 CFLAGS += -fno-strict-aliasing
