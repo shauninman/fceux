@@ -462,6 +462,8 @@ void FCEU_DispMessageOnMovie(char *format, ...)
 
 void FCEU_DispMessage(char *format, int disppos=0, ...)
 {
+	return;
+	
 	va_list ap;
 
 	va_start(ap,disppos);
