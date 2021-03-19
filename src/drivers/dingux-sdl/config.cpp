@@ -149,10 +149,10 @@ Config * InitConfig() {
 	// video controls
 	config->addOption('x', "xres", "SDL.XResolution", 320);
 	config->addOption('y', "yres", "SDL.YResolution", 240);
-	config->addOption('f', "fullscreen", "SDL.Fullscreen", 2);	//for TRIMUI (FS Fast1)
+	config->addOption('f', "fullscreen", "SDL.Fullscreen", 0);	//for MinUI (Original)
 	config->addOption('b', "bpp", "SDL.BitsPerPixel", 8);
 	config->addOption("doublebuf", "SDL.DoubleBuffering", 0);
-	config->addOption("autoscale", "SDL.AutoScale", 1);
+	config->addOption("autoscale", "SDL.AutoScale", 0);
 	config->addOption("keepratio", "SDL.KeepRatio", 1);
 	config->addOption("xscale", "SDL.XScale", 1.0);
 	config->addOption("yscale", "SDL.YScale", 1.0);
