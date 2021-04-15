@@ -535,7 +535,11 @@ int FCEUD_LoadMovie(const char *name, char *romname) {
 #endif
 
 #include <dlfcn.h>
+extern "C" {
+	#include <mmenu.h>
+}
 void* mmenu = NULL;
+static int resume_slot = -1;
 
 int main(int argc, char *argv[]) {
 
@@ -816,6 +820,17 @@ int main(int argc, char *argv[]) {
 	UpdateInput(g_config);
 	
 	mmenu = dlopen("libmmenu.so", RTLD_LAZY);
+	if (mmenu) {
+		ResumeSlot_t ResumeSlot = (ResumeSlot_t)dlsym(mmenu, "ResumeSlot");
+		if (ResumeSlot) resume_slot = ResumeSlot();
+		if (resume_slot!=-1) {
+			extern int g_slot;
+			g_slot = resume_slot;
+			FCEUI_SelectState(g_slot, 0);
+			FCEUI_LoadState(NULL);
+			resume_slot = -1;
+		}
+	}
 	
 	// loop playing the game
 	DoFun(frameskip);
