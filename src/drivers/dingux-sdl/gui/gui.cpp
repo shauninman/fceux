@@ -325,7 +325,7 @@ void FCEUGUI_Kill() {
 extern void InitGuiVideo();
 
 void FCEUGUI_Run() {
-	SDL_EnableKeyRepeat(500, 150); // top level menu doesn't use repeat?
+	SDL_EnableKeyRepeat(300, 100); // top level menu doesn't use repeat?
 	
 	static int index = 0;
 	static int spy = 72;
